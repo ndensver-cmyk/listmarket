@@ -34,22 +34,57 @@ jobs:
           echo '--- DEPENDENCIAS ---'
           cat MercadoList/app/build.gradle* 2>/dev/null || true
 
-      - name: Añadir fotografías a las tarjetas de categorías
+      - name: Añadir fotografías reales a productos y categorías
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('MercadoList/app/src/main/java/com/mercadolist/ui/Home.kt')
-          s = p.read_text()
-          old = '''                            Box(Modifier.size(44.dp).clip(CircleShape).background(catColor(c.id)), contentAlignment = Alignment.Center) {
-                                Icon(catIcon(c.name), null, tint = Ink)
-                            }'''
-          new = '''                            Box(Modifier.size(68.dp).clip(RoundedCornerShape(12.dp)).background(Color.White), contentAlignment = Alignment.Center) {
-                                ProductImage(null, c.name, c.id, Modifier.fillMaxSize(), c.name)
-                            }'''
-          if old not in s:
-              raise SystemExit('No se encontró el bloque original de categorías; no se aplicaron cambios.')
-          p.write_text(s.replace(old, new, 1))
-          print('Tarjetas de categorías actualizadas para mostrar fotos de producto.')
+          import re
+          base = Path('MercadoList/app/src/main/java/com/mercadolist')
+          comp = base / 'ui/Components.kt'
+          s = comp.read_text()
+          pattern = r'@Composable\\nfun ProductImage\\(url: String\\?, brand: String, categoryId: Long, modifier: Modifier = Modifier, name: String = ""\\) \\{.*?\\n\\}'
+          replacement = '''private fun categoryPhotoUrl(categoryId: Long): String = when (categoryId) {
+              1L -> "https://images.unsplash.com/photo-1542838132-92c53300491e?w=640&q=85"
+              2L -> "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=640&q=85"
+              3L -> "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=640&q=85"
+              4L -> "https://images.unsplash.com/photo-1513558161293-cdaf765edfd47?w=640&q=85"
+              5L -> "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=640&q=85"
+              6L -> "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=640&q=85"
+              7L -> "https://images.unsplash.com/photo-1621939514649-280e2aa2f7f5?w=640&q=85"
+              8L -> "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=640&q=85"
+              9L -> "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=640&q=85"
+              10L -> "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=640&q=85"
+              11L -> "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=640&q=85"
+              12L -> "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=640&q=85"
+              13L -> "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=640&q=85"
+              else -> "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=640&q=85"
+          }
+
+          @Composable
+          fun ProductImage(url: String?, brand: String, categoryId: Long, modifier: Modifier = Modifier, name: String = "") {
+              val photo = url?.takeIf { it.isNotBlank() } ?: categoryPhotoUrl(categoryId)
+              SubcomposeAsyncImage(
+                  model = photo,
+                  contentDescription = name.ifBlank { "Imagen de producto" },
+                  modifier = modifier,
+                  contentScale = ContentScale.Crop,
+                  loading = { Box(Modifier.fillMaxSize().background(catColor(categoryId))) },
+                  error = { Box(Modifier.fillMaxSize().background(catColor(categoryId))) }
+              )
+          }'''
+          s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('No se pudo reemplazar ProductImage; se cancela sin modificar.')
+          comp.write_text(s2)
+
+          home = base / 'ui/Home.kt'
+          h = home.read_text()
+          block = re.compile(r'Box\\(Modifier\\.size\\(44\\.dp\\)\\.clip\\(CircleShape\\)\\.background\\(catColor\\(c\\.id\\)\\), contentAlignment = Alignment\\.Center\\) \\{\\s*Icon\\(catIcon\\(c\\.name\\), null, tint = Ink\\)\\s*\\}')
+          h2, n2 = block.subn('Box(Modifier.size(68.dp).clip(RoundedCornerShape(12.dp)).background(Color.White), contentAlignment = Alignment.Center) {\\n                                ProductImage(null, c.name, c.id, Modifier.fillMaxSize(), c.name)\\n                            }', h, count=1)
+          if n2 != 1:
+              raise SystemExit('No se encontró la tarjeta de categoría para aplicar fotos.')
+          home.write_text(h2)
+          print('Fotografías por categoría activadas; se conservan las fotos específicas de Open Food Facts cuando existen.')
           PY
 
       - name: Rediseñar animación de inicio sin emojis
