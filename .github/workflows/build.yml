@@ -18,6 +18,15 @@ jobs:
       - name: Descomprimir proyecto
         run: unzip -q MercadoList.zip
 
+      - name: Inspeccionar pantallas para integrar imágenes
+        run: |
+          echo '--- ARCHIVOS KOTLIN ---'
+          find MercadoList/app/src/main -type f -name '*.kt' -print
+          echo '--- HOME ---'
+          find MercadoList/app/src/main -type f -name 'Home.kt' -exec cat {} \\\;
+          echo '--- DEPENDENCIAS ---'
+          cat MercadoList/app/build.gradle* 2>/dev/null || true
+
       - name: Rediseñar animación de inicio sin emojis
         run: |
           cat > MercadoList/app/src/main/java/com/mercadolist/ui/Splash.kt <<'EOF'
