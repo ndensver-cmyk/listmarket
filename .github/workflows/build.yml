@@ -18,6 +18,13 @@ jobs:
       - name: Descomprimir proyecto
         run: unzip -q MercadoList.zip
 
+      - name: Inspeccionar interfaz y recursos
+        run: |
+          echo "=== ARCHIVOS DEL PROYECTO ==="
+          find MercadoList -type f | sort | head -250
+          echo "=== REFERENCIAS A EMOJIS Y ANIMACION ==="
+          grep -RInE '([😀-🙏🌀-🗿🚀-🛿]|emoji|AnimatedVisibility|animate[A-Z]|Lottie|splash|Welcome|Onboarding)' MercadoList/app/src --include='*.kt' --include='*.xml' --include='*.json' --include='*.gradle*' | head -300 || true
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
