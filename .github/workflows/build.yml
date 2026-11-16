@@ -18,6 +18,13 @@ jobs:
       - name: Descomprimir proyecto
         run: unzip -q MercadoList.zip
 
+      - name: Inspeccionar componentes de imágenes y catálogo
+        run: |
+          for f in MercadoList/app/src/main/java/com/mercadolist/data/PhotoFinder.kt MercadoList/app/src/main/java/com/mercadolist/ui/Components.kt MercadoList/app/src/main/java/com/mercadolist/ui/Explore.kt MercadoList/app/src/main/java/com/mercadolist/ui/Product.kt MercadoList/app/src/main/java/com/mercadolist/data/Entities.kt MercadoList/app/src/main/java/com/mercadolist/data/CatalogGenerator.kt; do
+            echo "--- $f ---"
+            sed -n '1,260p' "$f"
+          done
+
       - name: Inspeccionar pantallas para integrar imágenes
         run: |
           echo '--- ARCHIVOS KOTLIN ---'
