@@ -34,6 +34,24 @@ jobs:
           echo '--- DEPENDENCIAS ---'
           cat MercadoList/app/build.gradle* 2>/dev/null || true
 
+      - name: Añadir fotografías a las tarjetas de categorías
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('MercadoList/app/src/main/java/com/mercadolist/ui/Home.kt')
+          s = p.read_text()
+          old = '''                            Box(Modifier.size(44.dp).clip(CircleShape).background(catColor(c.id)), contentAlignment = Alignment.Center) {
+                                Icon(catIcon(c.name), null, tint = Ink)
+                            }'''
+          new = '''                            Box(Modifier.size(68.dp).clip(RoundedCornerShape(12.dp)).background(Color.White), contentAlignment = Alignment.Center) {
+                                ProductImage(null, c.name, c.id, Modifier.fillMaxSize(), c.name)
+                            }'''
+          if old not in s:
+              raise SystemExit('No se encontró el bloque original de categorías; no se aplicaron cambios.')
+          p.write_text(s.replace(old, new, 1))
+          print('Tarjetas de categorías actualizadas para mostrar fotos de producto.')
+          PY
+
       - name: Rediseñar animación de inicio sin emojis
         run: |
           cat > MercadoList/app/src/main/java/com/mercadolist/ui/Splash.kt <<'EOF'
