@@ -22,8 +22,16 @@ jobs:
         run: |
           echo "=== ARCHIVOS DEL PROYECTO ==="
           find MercadoList -type f | sort | head -250
-          echo "=== REFERENCIAS A EMOJIS Y ANIMACION ==="
-          grep -RInE '([😀-🙏🌀-🗿🚀-🛿]|emoji|AnimatedVisibility|animate[A-Z]|Lottie|splash|Welcome|Onboarding)' MercadoList/app/src --include='*.kt' --include='*.xml' --include='*.json' --include='*.gradle*' | head -300 || true
+          echo "=== PANTALLA SPLASH ==="
+          sed -n '1,260p' MercadoList/app/src/main/java/com/mercadolist/ui/Splash.kt
+          echo "=== TEMA ==="
+          sed -n '1,240p' MercadoList/app/src/main/java/com/mercadolist/ui/Theme.kt
+          echo "=== HOME ==="
+          sed -n '1,260p' MercadoList/app/src/main/java/com/mercadolist/ui/Home.kt
+          echo "=== COMPONENTES ==="
+          sed -n '1,260p' MercadoList/app/src/main/java/com/mercadolist/ui/Components.kt
+          echo "=== EMOJIS EN KOTLIN ==="
+          grep -RInE '[[:cntrl:]]' MercadoList/app/src/main/java --include='*.kt' | head -30 || true
 
       - uses: actions/setup-java@v4
         with:
