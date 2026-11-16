@@ -23,7 +23,7 @@ jobs:
           echo '--- ARCHIVOS KOTLIN ---'
           find MercadoList/app/src/main -type f -name '*.kt' -print
           echo '--- HOME ---'
-          find MercadoList/app/src/main -type f -name 'Home.kt' -exec cat {} \\\;
+          sed -n '1,280p' MercadoList/app/src/main/java/com/mercadolist/ui/Home.kt
           echo '--- DEPENDENCIAS ---'
           cat MercadoList/app/build.gradle* 2>/dev/null || true
 
