@@ -18,20 +18,101 @@ jobs:
       - name: Descomprimir proyecto
         run: unzip -q MercadoList.zip
 
-      - name: Inspeccionar interfaz y recursos
+      - name: Rediseñar animación de inicio sin emojis
         run: |
-          echo "=== ARCHIVOS DEL PROYECTO ==="
-          find MercadoList -type f | sort | head -250
-          echo "=== PANTALLA SPLASH ==="
-          sed -n '1,260p' MercadoList/app/src/main/java/com/mercadolist/ui/Splash.kt
-          echo "=== TEMA ==="
-          sed -n '1,240p' MercadoList/app/src/main/java/com/mercadolist/ui/Theme.kt
-          echo "=== HOME ==="
-          sed -n '1,260p' MercadoList/app/src/main/java/com/mercadolist/ui/Home.kt
-          echo "=== COMPONENTES ==="
-          sed -n '1,260p' MercadoList/app/src/main/java/com/mercadolist/ui/Components.kt
-          echo "=== EMOJIS EN KOTLIN ==="
-          grep -RInE '[[:cntrl:]]' MercadoList/app/src/main/java --include='*.kt' | head -30 || true
+          cat > MercadoList/app/src/main/java/com/mercadolist/ui/Splash.kt <<'EOF'
+          package com.mercadolist.ui
+
+          import androidx.compose.animation.core.Animatable
+          import androidx.compose.animation.core.FastOutSlowInEasing
+          import androidx.compose.animation.core.tween
+          import androidx.compose.foundation.Canvas
+          import androidx.compose.foundation.background
+          import androidx.compose.foundation.layout.Box
+          import androidx.compose.foundation.layout.Column
+          import androidx.compose.foundation.layout.Spacer
+          import androidx.compose.foundation.layout.fillMaxSize
+          import androidx.compose.foundation.layout.height
+          import androidx.compose.foundation.layout.size
+          import androidx.compose.material3.Text
+          import androidx.compose.runtime.Composable
+          import androidx.compose.runtime.LaunchedEffect
+          import androidx.compose.runtime.remember
+          import androidx.compose.ui.Alignment
+          import androidx.compose.ui.Modifier
+          import androidx.compose.ui.geometry.Offset
+          import androidx.compose.ui.geometry.Size
+          import androidx.compose.ui.graphics.Path
+          import androidx.compose.ui.graphics.drawscope.Stroke
+          import androidx.compose.ui.graphics.graphicsLayer
+          import androidx.compose.ui.text.font.FontWeight
+          import androidx.compose.ui.unit.dp
+          import androidx.compose.ui.unit.sp
+          import kotlinx.coroutines.delay
+
+          @Composable
+          fun SplashOverlay(onFinished: () -> Unit) {
+              val entrance = remember { Animatable(0.72f) }
+              val title = remember { Animatable(0f) }
+              val fade = remember { Animatable(1f) }
+
+              LaunchedEffect(Unit) {
+                  entrance.animateTo(1f, tween(700, easing = FastOutSlowInEasing))
+                  title.animateTo(1f, tween(420, easing = FastOutSlowInEasing))
+                  delay(650)
+                  fade.animateTo(0f, tween(300))
+                  onFinished()
+              }
+
+              Box(
+                  Modifier.fillMaxSize().background(Yellow).graphicsLayer { alpha = fade.value },
+                  contentAlignment = Alignment.Center
+              ) {
+                  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                      Canvas(Modifier.size(208.dp).graphicsLayer {
+                          scaleX = entrance.value
+                          scaleY = entrance.value
+                          translationY = (1f - entrance.value) * 32f
+                      }) {
+                          val w = size.width
+                          val h = size.height
+                          val basket = Path().apply {
+                              moveTo(w * .22f, h * .35f)
+                              lineTo(w * .82f, h * .35f)
+                              lineTo(w * .72f, h * .70f)
+                              lineTo(w * .34f, h * .70f)
+                              close()
+                          }
+                          drawPath(basket, Ink, style = Stroke(width = 9f))
+                          drawLine(Ink, Offset(w * .12f, h * .18f), Offset(w * .25f, h * .18f), 9f)
+                          drawLine(Ink, Offset(w * .25f, h * .18f), Offset(w * .36f, h * .35f), 9f)
+                          drawCircle(Ink, 10f, Offset(w * .42f, h * .82f))
+                          drawCircle(Ink, 10f, Offset(w * .70f, h * .82f))
+                          drawCircle(Ink, 17f, Offset(w * .43f, h * .29f))
+                          drawCircle(Ink, 15f, Offset(w * .58f, h * .27f))
+                          drawRoundRect(Ink, topLeft = Offset(w * .64f, h * .17f),
+                              size = Size(w * .11f, h * .17f),
+                              cornerRadius = androidx.compose.ui.geometry.CornerRadius(5f))
+                          drawLine(Yellow, Offset(w * .69f, h * .18f), Offset(w * .69f, h * .31f), 4f)
+                          drawLine(Ink, Offset(w * .41f, h * .10f), Offset(w * .47f, h * .17f), 5f)
+                          drawLine(Ink, Offset(w * .58f, h * .08f), Offset(w * .58f, h * .16f), 5f)
+                      }
+                      Spacer(Modifier.height(18.dp))
+                      Text("MercadoList", color = Ink, fontSize = 34.sp,
+                          fontWeight = FontWeight.ExtraBold,
+                          modifier = Modifier.graphicsLayer {
+                              alpha = title.value
+                              translationY = (1f - title.value) * 18f
+                          })
+                      Text("Tu mercado, en orden.", color = Ink.copy(alpha = .76f),
+                          fontSize = 14.sp,
+                          modifier = Modifier.graphicsLayer { alpha = title.value })
+                  }
+              }
+          }
+          EOF
+          echo "Splash vectorial instalado. Emojis detectados en el resto del código:"
+          grep -RInP '[\x{1F300}-\x{1FAFF}]' MercadoList/app/src/main/java --include='*.kt' || true
 
       - uses: actions/setup-java@v4
         with:
