@@ -42,7 +42,8 @@ jobs:
           base = Path('MercadoList/app/src/main/java/com/mercadolist')
           comp = base / 'ui/Components.kt'
           s = comp.read_text()
-          pattern = r'@Composable\\nfun ProductImage\\(url: String\\?, brand: String, categoryId: Long, modifier: Modifier = Modifier, name: String = ""\\) \\{.*?\\n\\}'
+          start = s.index("@Composable\\nfun ProductImage(")
+          end = s.index("\\n}\\n", start) + 2
           replacement = '''private fun categoryPhotoUrl(categoryId: Long): String = when (categoryId) {
               1L -> "https://images.unsplash.com/photo-1542838132-92c53300491e?w=640&q=85"
               2L -> "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=640&q=85"
@@ -72,19 +73,19 @@ jobs:
                   error = { Box(Modifier.fillMaxSize().background(catColor(categoryId))) }
               )
           }'''
-          s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
-          if n != 1:
-              raise SystemExit('No se pudo reemplazar ProductImage; se cancela sin modificar.')
-          comp.write_text(s2)
+          comp.write_text(s[:start] + replacement + s[end:])
 
           home = base / 'ui/Home.kt'
           h = home.read_text()
-          block = re.compile(r'Box\\(Modifier\\.size\\(44\\.dp\\)\\.clip\\(CircleShape\\)\\.background\\(catColor\\(c\\.id\\)\\), contentAlignment = Alignment\\.Center\\) \\{\\s*Icon\\(catIcon\\(c\\.name\\), null, tint = Ink\\)\\s*\\}')
-          h2, n2 = block.subn('Box(Modifier.size(68.dp).clip(RoundedCornerShape(12.dp)).background(Color.White), contentAlignment = Alignment.Center) {\\n                                ProductImage(null, c.name, c.id, Modifier.fillMaxSize(), c.name)\\n                            }', h, count=1)
-          if n2 != 1:
-              raise SystemExit('No se encontró la tarjeta de categoría para aplicar fotos.')
+          pattern = r'Box\\(Modifier\\.size\\(44\\.dp\\)\\.clip\\(CircleShape\\)\\.background\\(catColor\\(c\\.id\\)\\), contentAlignment = Alignment\\.Center\\) \\{\\s*Icon\\(catIcon\\(c\\.name\\), null, tint = Ink\\)\\s*\\}'
+          new = '''Box(Modifier.size(68.dp).clip(RoundedCornerShape(12.dp)).background(Color.White), contentAlignment = Alignment.Center) {
+                                ProductImage(null, c.name, c.id, Modifier.fillMaxSize(), c.name)
+                            }'''
+          h2, count = re.subn(pattern, lambda _: new, h, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('No se encontró el bloque de categorías; se cancela.')
           home.write_text(h2)
-          print('Fotografías por categoría activadas; se conservan las fotos específicas de Open Food Facts cuando existen.')
+          print('Fotos de categoría y fotos genéricas de respaldo activadas.')
           PY
 
       - name: Rediseñar animación de inicio sin emojis
