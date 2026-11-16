@@ -18,6 +18,15 @@ jobs:
       - name: Descomprimir proyecto
         run: unzip -q MercadoList.zip
 
+      - name: Localizar llamadas de búsqueda de fotografías y códigos de barras
+        run: |
+          echo '--- LLAMADAS PhotoFinder ---'
+          grep -RIn 'PhotoFinder\\.find\\|PhotoFinder' MercadoList/app/src/main/java --include='*.kt' || true
+          echo '--- CAMPOS DE CÓDIGO DE BARRAS ---'
+          grep -RIn 'BarcodeEntity\\|barcodeDao\\|ean\\|imageUrl' MercadoList/app/src/main/java/com/mercadolist --include='*.kt' | head -240 || true
+          echo '--- FUENTES DE IMÁGENES Y REPOSITORIOS ---'
+          grep -RIn 'openfoodfacts\\|image_front\\|imageUrl\\|PhotoFinder' MercadoList/app/src/main/java --include='*.kt' || true
+
       - name: Inspeccionar componentes de imágenes y catálogo
         run: |
           for f in MercadoList/app/src/main/java/com/mercadolist/data/PhotoFinder.kt MercadoList/app/src/main/java/com/mercadolist/ui/Components.kt MercadoList/app/src/main/java/com/mercadolist/ui/Explore.kt MercadoList/app/src/main/java/com/mercadolist/ui/Product.kt MercadoList/app/src/main/java/com/mercadolist/data/Entities.kt MercadoList/app/src/main/java/com/mercadolist/data/CatalogGenerator.kt; do
