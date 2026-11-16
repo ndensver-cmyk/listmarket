@@ -15,8 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - - name: Descomprimir proyecto
-        run: for z in MercadoList*.zip; do unzip -q -o "$z"; done
+      - name: Descomprimir proyecto
+        run: unzip -q MercadoList.zip
 
       - uses: actions/setup-java@v4
         with:
